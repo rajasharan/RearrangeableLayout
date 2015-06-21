@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">Rearrangeable Layout Demo</string>
+    <string name="title_activity_main">MainActivity</string>
+
+    <string name="hello_world">Demo of Rearrangeable Layout</string>
+    <string name="action_settings">Settings</string>
+</resources>

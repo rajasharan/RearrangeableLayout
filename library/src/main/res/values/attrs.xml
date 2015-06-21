@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <declare-styleable name="RearrangeableLayout">
+        <attr name="outlineWidth" format="dimension" />
+        <attr name="outlineColor" format="color" />
+        <attr name="outlineAlpha" format="integer" />
+    </declare-styleable>
+</resources>
