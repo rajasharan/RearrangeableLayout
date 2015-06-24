@@ -80,8 +80,9 @@ public class RearrangeableLayout extends ViewGroup {
             LayoutParams mp = (LayoutParams) view.getLayoutParams();
             view.measure(MeasureSpec.makeMeasureSpec(width -mp.leftMargin -mp.rightMargin, MeasureSpec.AT_MOST),
                     MeasureSpec.makeMeasureSpec(height -mp.topMargin -mp.bottomMargin, MeasureSpec.AT_MOST));
-            int w = view.getMeasuredWidth();
-            int h = view.getMeasuredHeight();
+
+            //int w = view.getMeasuredWidth();
+            //int h = view.getMeasuredHeight();
             //Log.d(TAG, String.format("View #%d: (%d, %d)", i, w, h));
         }
         setMeasuredDimension(width, height);
@@ -89,8 +90,12 @@ public class RearrangeableLayout extends ViewGroup {
 
     @Override
     protected void onLayout(boolean changed, int l, int t, int r, int b) {
-        //Log.d(TAG, String.format("(%d, %d, %d, %d)", l, t, r, b));
-        doInitialLayout(l, t, r, b, getChildCount());
+        if (mSelectedChild == null) {
+            doInitialLayout(l, t, r, b, getChildCount());
+        }
+        else {
+            layoutSelectedChild();
+        }
     }
 
     private void doInitialLayout(int l, int t, int r, int b, int count) {
@@ -136,9 +141,17 @@ public class RearrangeableLayout extends ViewGroup {
                 view.layout(x1, y1, x2, y2);
             }
         }
-        if (mSelectedChild != null) {
-            layoutDrawInvalidateSelectedChild(true, false, null);
-        }
+    }
+
+    private void layoutSelectedChild() {
+        LayoutParams lp = (LayoutParams) mSelectedChild.getLayoutParams();
+        int l = Math.round(lp.left);
+        int t = Math.round(lp.top);
+        int r = l + mSelectedChild.getMeasuredWidth();
+        int b = t + mSelectedChild.getMeasuredHeight();
+
+        lp.moved = true;
+        mSelectedChild.layout(l, t, r, b);
     }
 
     /**
@@ -213,9 +226,8 @@ public class RearrangeableLayout extends ViewGroup {
                         lp.top = 0.0f;
                     }
 
-                    //lp.moved = true;
-                    //requestLayout();
-                    layoutDrawInvalidateSelectedChild(true, true, null);
+                    layoutSelectedChild();
+                    invalidate();
                 }
                 break;
             case MotionEvent.ACTION_CANCEL:
