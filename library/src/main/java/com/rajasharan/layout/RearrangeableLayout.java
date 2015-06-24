@@ -82,7 +82,7 @@ public class RearrangeableLayout extends ViewGroup {
                     MeasureSpec.makeMeasureSpec(height -mp.topMargin -mp.bottomMargin, MeasureSpec.AT_MOST));
             int w = view.getMeasuredWidth();
             int h = view.getMeasuredHeight();
-            Log.d(TAG, String.format("View #%d: (%d, %d)", i, w, h));
+            //Log.d(TAG, String.format("View #%d: (%d, %d)", i, w, h));
         }
         setMeasuredDimension(width, height);
     }
@@ -221,8 +221,10 @@ public class RearrangeableLayout extends ViewGroup {
             case MotionEvent.ACTION_CANCEL:
             case MotionEvent.ACTION_UP:
             default:
-                mSelectedChild = null;
-                invalidate();
+                if (mSelectedChild != null) {
+                    mSelectedChild = null;
+                    invalidate();
+                }
                 break;
         }
         return true;
