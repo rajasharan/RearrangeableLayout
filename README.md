@@ -1,6 +1,8 @@
 # Android Rearrangeable Layout
 An android layout to re-arrange child views via dragging
 
+[![Android Arsenal](https://img.shields.io/badge/Android%20Arsenal-RearrangeableLayout-green.svg?style=flat)](https://android-arsenal.com/details/1/2037)
+
 ## Screencast Demo
 ![](/screencast.gif)
 
@@ -16,9 +18,10 @@ All the child views are draggable once the layout is added to an activity
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:clipToPadding="false"
-    app:outlineWidth="5dp"
+    app:outlineWidth="2dp"
     app:outlineColor="@color/cyan"
-    app:outlineAlpha="128"
+    app:selectionAlpha="0.5"
+    app:selectionZoom="1.2"
     >
 
     <TextView
