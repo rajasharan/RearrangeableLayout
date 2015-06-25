@@ -25,6 +25,8 @@ public class RearrangeableLayout extends ViewGroup {
 
     private PointF mStartTouch;
     private View mSelectedChild;
+    private float mSelectionZoom;
+    private Paint mSelectionPaint;
     private Paint mOutlinePaint;
 
     public RearrangeableLayout(Context context) {
@@ -45,16 +47,28 @@ public class RearrangeableLayout extends ViewGroup {
         mSelectedChild = null;
 
         TypedArray a = context.obtainStyledAttributes(attrs, R.styleable.RearrangeableLayout);
-        float strokeWidth = a.getDimension(R.styleable.RearrangeableLayout_outlineWidth, 5.0f);
-        int color = a.getColor(R.styleable.RearrangeableLayout_outlineColor, Color.RED);
-        int alpha = a.getInt(R.styleable.RearrangeableLayout_outlineAlpha, 10);
+        float strokeWidth = a.getDimension(R.styleable.RearrangeableLayout_outlineWidth, 2.0f);
+        int color = a.getColor(R.styleable.RearrangeableLayout_outlineColor, Color.GRAY);
+        float alpha = a.getFloat(R.styleable.RearrangeableLayout_selectionAlpha, 0.5f);
+        mSelectionZoom = a.getFloat(R.styleable.RearrangeableLayout_selectionZoom, 1.2f);
         a.recycle();
+
+        float filter[] = new float[] {
+                1f, 0f, 0f, 0f, 0f,
+                0f, 1f, 0f, 0f, 0f,
+                0f, 0f, 1f, 0f, 0f,
+                0f, 0f, 0f, alpha, 0f
+        };
+        ColorMatrixColorFilter colorFilter = new ColorMatrixColorFilter(new ColorMatrix(filter));
 
         mOutlinePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         mOutlinePaint.setStyle(Paint.Style.STROKE);
         mOutlinePaint.setStrokeWidth(strokeWidth);
         mOutlinePaint.setColor(color);
-        mOutlinePaint.setAlpha(alpha);
+        mOutlinePaint.setColorFilter(colorFilter);
+
+        mSelectionPaint = new Paint();
+        mSelectionPaint.setColorFilter(colorFilter);
     }
 
     @Override
@@ -163,33 +177,24 @@ public class RearrangeableLayout extends ViewGroup {
             mSelectedChild.setVisibility(View.GONE);
         }
         super.dispatchDraw(canvas);
-/*
-
-        for (int i=0; i<getChildCount(); i++) {
-            View view = getChildAt(i);
-            if (view != mSelectedChild) {
-                view.draw(canvas);
-            }
-        }
-*/
 
         if (mSelectedChild != null) {
-            mSelectedChild.setVisibility(View.VISIBLE);
-            LayoutParams lp = (LayoutParams) mSelectedChild.getLayoutParams();
             Rect rect = new Rect();
             mSelectedChild.getHitRect(rect);
+
             int restorePoint = canvas.save();
-            canvas.scale(1.2f, 1.2f, rect.centerX(), rect.centerY());
+            canvas.scale(mSelectionZoom, mSelectionZoom, rect.centerX(), rect.centerY());
             canvas.drawRect(rect, mOutlinePaint);
+
             mSelectedChild.setDrawingCacheEnabled(true);
             Bitmap child = mSelectedChild.getDrawingCache();
-            Paint p = new Paint();
-            p.setColorFilter(new ColorMatrixColorFilter(new ColorMatrix(new float[] {
-                    1f, 0f, 0f, 0f, 0f,
-                    0f, 1f, 0f, 0f, 0f,
-                    0f, 0f, 1f, 0f, 0f,
-                    0f, 0f, 0f, 0.5f, 0f})));
-            canvas.drawBitmap(child, lp.left, lp.top, p);
+            if (child != null) {
+                LayoutParams lp = (LayoutParams) mSelectedChild.getLayoutParams();
+                canvas.drawBitmap(child, lp.left, lp.top, mSelectionPaint);
+            } else {
+                Log.d(TAG, "drawingCache not found! Maybe because of hardware acceleration");
+                mSelectedChild.draw(canvas);
+            }
             canvas.restoreToCount(restorePoint);
         }
     }
@@ -234,6 +239,7 @@ public class RearrangeableLayout extends ViewGroup {
             case MotionEvent.ACTION_UP:
             default:
                 if (mSelectedChild != null) {
+                    mSelectedChild.setVisibility(View.VISIBLE);
                     mSelectedChild = null;
                     invalidate();
                 }

@@ -3,6 +3,7 @@
     <declare-styleable name="RearrangeableLayout">
         <attr name="outlineWidth" format="dimension" />
         <attr name="outlineColor" format="color" />
-        <attr name="outlineAlpha" format="integer" />
+        <attr name="selectionAlpha" format="float" />
+        <attr name="selectionZoom" format="float" />
     </declare-styleable>
 </resources>

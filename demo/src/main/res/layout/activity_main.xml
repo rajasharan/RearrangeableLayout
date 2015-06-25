@@ -6,9 +6,10 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:clipToPadding="false"
-    app:outlineWidth="5dp"
+    app:outlineWidth="2dp"
     app:outlineColor="@color/cyan"
-    app:outlineAlpha="128"
+    app:selectionAlpha="0.5"
+    app:selectionZoom="1.2"
     >
 
     <TextView
