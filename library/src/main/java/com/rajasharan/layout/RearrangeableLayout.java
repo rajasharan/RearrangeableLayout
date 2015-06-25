@@ -2,8 +2,11 @@ package com.rajasharan.layout;
 
 import android.content.Context;
 import android.content.res.TypedArray;
+import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.ColorMatrix;
+import android.graphics.ColorMatrixColorFilter;
 import android.graphics.Paint;
 import android.graphics.PointF;
 import android.graphics.Rect;
@@ -154,43 +157,40 @@ public class RearrangeableLayout extends ViewGroup {
         mSelectedChild.layout(l, t, r, b);
     }
 
-    /**
-     *
-     * Depending on the parameter passed, this method either:<br>
-     *  - calls a layout on the selectedChild <br>
-     *  - or invalidates the entire layout <br>
-     *  - or draws an outline Rect around the selectedChild <br>
-     *
-     * @param layout if true call layout on the selectedChild;
-     * @param invalidate if true call invalidate on the selectedChild rect;
-     * @param canvas if non-null draw outline rect aound selectedChild;
-     */
-    private void layoutDrawInvalidateSelectedChild(boolean layout, boolean invalidate, Canvas canvas) {
-        LayoutParams cp = (LayoutParams) mSelectedChild.getLayoutParams();
-        int l = Math.round(cp.left);
-        int t = Math.round(cp.top);
-        int r = l + mSelectedChild.getMeasuredWidth();
-        int b = t + mSelectedChild.getMeasuredHeight();
-
-        if (layout) {
-            cp.moved = true;
-            mSelectedChild.layout(l, t, r, b);
-        }
-        if (invalidate) {
-            invalidate();
-        }
-        if (canvas != null) {
-            Rect rect = new Rect();
-            mSelectedChild.getHitRect(rect);
-            canvas.drawRect(rect, mOutlinePaint);
-        }
-    }
-
     @Override
     protected void dispatchDraw(Canvas canvas) {
-        super.dispatchDraw(canvas);
         if (mSelectedChild != null) {
-            layoutDrawInvalidateSelectedChild(false, false, canvas);
+            mSelectedChild.setVisibility(View.GONE);
+        }
+        super.dispatchDraw(canvas);
+/*
+
+        for (int i=0; i<getChildCount(); i++) {
+            View view = getChildAt(i);
+            if (view != mSelectedChild) {
+                view.draw(canvas);
+            }
+        }
+*/
+
+        if (mSelectedChild != null) {
+            mSelectedChild.setVisibility(View.VISIBLE);
+            LayoutParams lp = (LayoutParams) mSelectedChild.getLayoutParams();
+            Rect rect = new Rect();
+            mSelectedChild.getHitRect(rect);
+            int restorePoint = canvas.save();
+            canvas.scale(1.2f, 1.2f, rect.centerX(), rect.centerY());
+            canvas.drawRect(rect, mOutlinePaint);
+            mSelectedChild.setDrawingCacheEnabled(true);
+            Bitmap child = mSelectedChild.getDrawingCache();
+            Paint p = new Paint();
+            p.setColorFilter(new ColorMatrixColorFilter(new ColorMatrix(new float[] {
+                    1f, 0f, 0f, 0f, 0f,
+                    0f, 1f, 0f, 0f, 0f,
+                    0f, 0f, 1f, 0f, 0f,
+                    0f, 0f, 0f, 0.5f, 0f})));
+            canvas.drawBitmap(child, lp.left, lp.top, p);
+            canvas.restoreToCount(restorePoint);
         }
     }
 
