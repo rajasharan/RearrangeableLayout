@@ -241,7 +241,7 @@ public class RearrangeableLayout extends ViewGroup {
                 if (mSelectedChild != null) {
                     mSelectedChild.setVisibility(View.VISIBLE);
                     mSelectedChild = null;
-                    invalidate();
+                    //invalidate();
                 }
                 break;
         }

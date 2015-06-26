@@ -32,6 +32,14 @@ public class MainActivity extends ActionBarActivity {
 
             }
         });
+
+        root.getViewTreeObserver().addOnPreDrawListener(new ViewTreeObserver.OnPreDrawListener() {
+            @Override
+            public boolean onPreDraw() {
+                Log.d(TAG, "onPreDraw");
+                return true;
+            }
+        });
     }
 
     @Override
