@@ -15,6 +15,10 @@ import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.Animation;
+import android.view.animation.DecelerateInterpolator;
+import android.view.animation.LayoutAnimationController;
+import android.view.animation.TranslateAnimation;
 import android.widget.Toast;
 
 /**
@@ -69,6 +73,14 @@ public class RearrangeableLayout extends ViewGroup {
 
         mSelectionPaint = new Paint();
         mSelectionPaint.setColorFilter(colorFilter);
+
+        Animation trans = new TranslateAnimation(Animation.ABSOLUTE, 0, Animation.ABSOLUTE, 0,
+                Animation.RELATIVE_TO_PARENT, 1, Animation.RELATIVE_TO_PARENT, 0);
+        trans.setDuration(500);
+        trans.setInterpolator(new DecelerateInterpolator(1.0f));
+
+        LayoutAnimationController c = new LayoutAnimationController(trans, 0.7f);
+        setLayoutAnimation(c);
     }
 
     @Override
@@ -111,7 +123,7 @@ public class RearrangeableLayout extends ViewGroup {
             doInitialLayout(l, t, r, b, getChildCount());
         }
         else {
-            layoutSelectedChild();
+            //layoutSelectedChild();
         }
     }
 
@@ -160,8 +172,12 @@ public class RearrangeableLayout extends ViewGroup {
         }
     }
 
-    private void layoutSelectedChild() {
-        LayoutParams lp = (LayoutParams) mSelectedChild.getLayoutParams();
+    /**
+     * layout needed to re-calculate hit-rect of child
+     * otherwise outline border of the selected child is
+     * drawn at the old position
+     */
+    private void layoutSelectedChild(LayoutParams lp) {
         int l = Math.round(lp.left);
         int t = Math.round(lp.top);
         int r = l + mSelectedChild.getMeasuredWidth();
@@ -174,7 +190,7 @@ public class RearrangeableLayout extends ViewGroup {
     @Override
     protected void dispatchDraw(Canvas canvas) {
         if (mSelectedChild != null) {
-            mSelectedChild.setVisibility(View.GONE);
+            mSelectedChild.setVisibility(View.INVISIBLE);
         }
         super.dispatchDraw(canvas);
 
@@ -231,7 +247,8 @@ public class RearrangeableLayout extends ViewGroup {
                         lp.top = 0.0f;
                     }
 
-                    layoutSelectedChild();
+                    /* layout child otherwise hit-rect is not recalculated */
+                    layoutSelectedChild(lp);
                     invalidate();
                 }
                 break;
@@ -241,7 +258,6 @@ public class RearrangeableLayout extends ViewGroup {
                 if (mSelectedChild != null) {
                     mSelectedChild.setVisibility(View.VISIBLE);
                     mSelectedChild = null;
-                    //invalidate();
                 }
                 break;
         }
@@ -284,5 +300,16 @@ public class RearrangeableLayout extends ViewGroup {
             initial = new PointF(0.0f, 0.0f);
             moved = false;
         }
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder out = new StringBuilder(128);
+        out.append(TAG);
+        out.append(" mSelectedChild: ");
+        if (mSelectedChild != null) {
+            out.append(this.mSelectedChild.toString());
+        }
+        return out.toString();
     }
 }

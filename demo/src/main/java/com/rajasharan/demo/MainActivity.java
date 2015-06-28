@@ -1,7 +1,7 @@
 package com.rajasharan.demo;
 
-import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
+import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -22,21 +22,15 @@ public class MainActivity extends ActionBarActivity {
             @Override
             public void onGlobalLayout() {
                 Log.d(TAG, "onGlobalLayout");
-            }
-        });
-
-        root.getViewTreeObserver().addOnDrawListener(new ViewTreeObserver.OnDrawListener() {
-            @Override
-            public void onDraw() {
-                Log.d(TAG, "onDrawListener");
-
+                Log.d(TAG, root.toString());
             }
         });
 
         root.getViewTreeObserver().addOnPreDrawListener(new ViewTreeObserver.OnPreDrawListener() {
             @Override
             public boolean onPreDraw() {
-                Log.d(TAG, "onPreDraw");
+                //Log.d(TAG, "onPreDraw");
+                //Log.d(TAG, root.toString());
                 return true;
             }
         });
