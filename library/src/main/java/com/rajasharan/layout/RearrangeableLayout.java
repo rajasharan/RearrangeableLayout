@@ -10,13 +10,15 @@ import android.graphics.ColorMatrixColorFilter;
 import android.graphics.Paint;
 import android.graphics.PointF;
 import android.graphics.Rect;
+import android.os.Parcelable;
 import android.util.AttributeSet;
 import android.util.Log;
+import android.util.SparseArray;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.AccelerateInterpolator;
 import android.view.animation.Animation;
-import android.view.animation.DecelerateInterpolator;
 import android.view.animation.LayoutAnimationController;
 import android.view.animation.TranslateAnimation;
 import android.widget.Toast;
@@ -32,6 +34,7 @@ public class RearrangeableLayout extends ViewGroup {
     private float mSelectionZoom;
     private Paint mSelectionPaint;
     private Paint mOutlinePaint;
+    private SparseArray<Parcelable> mContainer;
 
     public RearrangeableLayout(Context context) {
         this(context, null);
@@ -49,6 +52,7 @@ public class RearrangeableLayout extends ViewGroup {
     private void init(Context context, AttributeSet attrs) {
         mStartTouch = null;
         mSelectedChild = null;
+        mContainer = new SparseArray<Parcelable>(5);
 
         TypedArray a = context.obtainStyledAttributes(attrs, R.styleable.RearrangeableLayout);
         float strokeWidth = a.getDimension(R.styleable.RearrangeableLayout_outlineWidth, 2.0f);
@@ -77,9 +81,9 @@ public class RearrangeableLayout extends ViewGroup {
         Animation trans = new TranslateAnimation(Animation.ABSOLUTE, 0, Animation.ABSOLUTE, 0,
                 Animation.RELATIVE_TO_PARENT, 1, Animation.RELATIVE_TO_PARENT, 0);
         trans.setDuration(500);
-        trans.setInterpolator(new DecelerateInterpolator(1.0f));
+        trans.setInterpolator(new AccelerateInterpolator(1.0f));
 
-        LayoutAnimationController c = new LayoutAnimationController(trans, 0.7f);
+        LayoutAnimationController c = new LayoutAnimationController(trans, 0.25f);
         setLayoutAnimation(c);
     }
 
@@ -121,9 +125,6 @@ public class RearrangeableLayout extends ViewGroup {
     protected void onLayout(boolean changed, int l, int t, int r, int b) {
         if (mSelectedChild == null) {
             doInitialLayout(l, t, r, b, getChildCount());
-        }
-        else {
-            //layoutSelectedChild();
         }
     }
 
@@ -173,7 +174,8 @@ public class RearrangeableLayout extends ViewGroup {
     }
 
     /**
-     * layout needed to re-calculate hit-rect of child
+     * this method can be used to force layout on a child
+     * to recalculate its hit-rect,
      * otherwise outline border of the selected child is
      * drawn at the old position
      */
@@ -299,6 +301,61 @@ public class RearrangeableLayout extends ViewGroup {
             top = -1.0f;
             initial = new PointF(0.0f, 0.0f);
             moved = false;
+        }
+    }
+
+    @Override
+    protected void onRestoreInstanceState(Parcelable state) {
+        if (!(state instanceof SavedState)) {
+            super.onRestoreInstanceState(state);
+            return;
+        }
+
+        SavedState ss = (SavedState) state;
+        super.onRestoreInstanceState(ss.getSuperState());
+
+        mContainer = ss.container;
+        for (int i=0; i<getChildCount(); i++) {
+            View view = getChildAt(i);
+            LayoutParams lp = (LayoutParams) view.getLayoutParams();
+
+            if (view.getId() != NO_ID) {
+                SavedState s = (SavedState) mContainer.get(view.getId());
+                lp.left = s.left;
+                lp.top = s.top;
+                lp.moved = s.movedFlag;
+            }
+        }
+    }
+
+    @Override
+    protected Parcelable onSaveInstanceState() {
+        for (int i=0; i<getChildCount(); i++) {
+            View view = getChildAt(i);
+            LayoutParams lp = (LayoutParams) view.getLayoutParams();
+            view.saveHierarchyState(mContainer);
+
+            if (view.getId() != NO_ID) {
+                SavedState s = new SavedState(mContainer.get(view.getId()));
+                s.left = lp.left;
+                s.top = lp.top;
+                s.movedFlag = lp.moved;
+                mContainer.put(view.getId(), s);
+            }
+        }
+        Parcelable p = super.onSaveInstanceState();
+        SavedState ss = new SavedState(p);
+        ss.container = mContainer;
+        return ss;
+    }
+
+    private static class SavedState extends BaseSavedState {
+        float left, top;
+        boolean movedFlag;
+        SparseArray<Parcelable> container;
+
+        public SavedState(Parcelable p) {
+            super(p);
         }
     }
 
