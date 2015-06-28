@@ -6,7 +6,7 @@ An android layout to re-arrange child views via dragging
 ## Screencast Demo
 ![](/screencast.gif)
 
-### Layout Usage
+## Layout Usage
 All the child views are draggable once the layout is added to an activity
 ([activity_main.xml](/demo/src/main/res/layout/activity_main.xml))
 ```xml
@@ -24,16 +24,11 @@ All the child views are draggable once the layout is added to an activity
     app:selectionZoom="1.2"
     >
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Sample Demo"
-        android:textSize="30sp"
-        android:background="@android:color/darker_gray"
-        android:layout_margin="15dp"
-        />
+    <!-- add child views with `android:id` attr to
+         save position during orientation change -->
 
     <TextView
+        android:id="@+id/textview_1"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Sample Demo with very large text that will overflow in width"
@@ -42,22 +37,31 @@ All the child views are draggable once the layout is added to an activity
         android:layout_margin="15dp"
         />
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Medium length text"
-        android:textSize="30sp"
-        android:background="@android:color/holo_blue_light"
-        android:layout_margin="15dp"
-        />
+    <!-- more child views -->
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Sample"
-        android:textSize="15sp"
-        android:background="@android:color/holo_orange_light"
-        android:layout_margin="15dp"
-        />
 </com.rajasharan.layout.RearrangeableLayout>
 ```
+
+## Child Position Listener
+Add a `ChildPositionListener` to the root layout to receive updates whenever any child view is dragged
+([MainActivity.java](/demo/src/main/java/com/rajasharan/demo/MainActivity.java))
+```java
+
+@Override
+protected void onCreate(Bundle savedInstanceState) {
+    super.onCreate(savedInstanceState);
+    setContentView(R.layout.activity_main);
+
+    root = (RearrangeableLayout) findViewById(R.id.rearrangeable_layout);
+    root.setChildPositionListener(new RearrangeableLayout.ChildPositionListener() {
+        @Override
+        public void onChildMoved(View childView, Rect oldPosition, Rect newPosition) {
+            Log.d(TAG, childView.toString());
+            Log.d(TAG, oldPosition.toString() + " -> " + newPosition.toString());
+        }
+    });
+}
+```
+
+## [License](/LICENSE)
+    The MIT License (MIT)

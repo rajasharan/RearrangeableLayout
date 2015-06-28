@@ -1,5 +1,6 @@
 package com.rajasharan.demo;
 
+import android.graphics.Rect;
 import android.os.Bundle;
 import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
@@ -8,16 +9,26 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewTreeObserver;
 
+import com.rajasharan.layout.RearrangeableLayout;
+
 public class MainActivity extends ActionBarActivity {
     private static final String TAG = "DEMO-REARRANGEABLE-LOUT";
-    private View root;
+    private RearrangeableLayout root;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        root = findViewById(R.id.rearrangeable_layout);
+        root = (RearrangeableLayout) findViewById(R.id.rearrangeable_layout);
+        root.setChildPositionListener(new RearrangeableLayout.ChildPositionListener() {
+            @Override
+            public void onChildMoved(View childView, Rect oldPosition, Rect newPosition) {
+                Log.d(TAG, childView.toString());
+                Log.d(TAG, oldPosition.toString() + " -> " + newPosition.toString());
+            }
+        });
+
         root.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
             @Override
             public void onGlobalLayout() {
@@ -25,7 +36,6 @@ public class MainActivity extends ActionBarActivity {
                 Log.d(TAG, root.toString());
             }
         });
-
         root.getViewTreeObserver().addOnPreDrawListener(new ViewTreeObserver.OnPreDrawListener() {
             @Override
             public boolean onPreDraw() {

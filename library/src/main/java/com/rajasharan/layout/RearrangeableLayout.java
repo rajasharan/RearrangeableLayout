@@ -36,6 +36,13 @@ public class RearrangeableLayout extends ViewGroup {
     private Paint mOutlinePaint;
     private SparseArray<Parcelable> mContainer;
 
+    /* callback to update clients whenever child is dragged */
+    private ChildPositionListener mListener;
+
+    /* used by ChildPositionListener callback */
+    private Rect mChildStartRect;
+    private Rect mChildEndRect;
+
     public RearrangeableLayout(Context context) {
         this(context, null);
     }
@@ -53,6 +60,9 @@ public class RearrangeableLayout extends ViewGroup {
         mStartTouch = null;
         mSelectedChild = null;
         mContainer = new SparseArray<Parcelable>(5);
+        mListener = null;
+        mChildStartRect = null;
+        mChildEndRect = null;
 
         TypedArray a = context.obtainStyledAttributes(attrs, R.styleable.RearrangeableLayout);
         float strokeWidth = a.getDimension(R.styleable.RearrangeableLayout_outlineWidth, 2.0f);
@@ -231,6 +241,10 @@ public class RearrangeableLayout extends ViewGroup {
                     LayoutParams lp = (LayoutParams) mSelectedChild.getLayoutParams();
                     lp.initial = new PointF(lp.left, lp.top);
                     mStartTouch = new PointF(x, y);
+                    if (mChildStartRect == null) {
+                        mChildStartRect = new Rect();
+                        mSelectedChild.getHitRect(mChildStartRect);
+                    }
                 }
                 break;
             case MotionEvent.ACTION_MOVE:
@@ -258,6 +272,12 @@ public class RearrangeableLayout extends ViewGroup {
             case MotionEvent.ACTION_UP:
             default:
                 if (mSelectedChild != null) {
+                    if (mListener != null && mChildStartRect != null) {
+                        mChildEndRect = new Rect();
+                        mSelectedChild.getHitRect(mChildEndRect);
+                        mListener.onChildMoved(mSelectedChild, mChildStartRect, mChildEndRect);
+                    }
+
                     mSelectedChild.setVisibility(View.VISIBLE);
                     mSelectedChild = null;
                 }
@@ -278,6 +298,7 @@ public class RearrangeableLayout extends ViewGroup {
             Rect rect = new Rect();
             view.getHitRect(rect);
             if (rect.contains(x, y)) {
+                mChildStartRect = rect;
                 return view;
             }
         }
@@ -357,6 +378,26 @@ public class RearrangeableLayout extends ViewGroup {
         public SavedState(Parcelable p) {
             super(p);
         }
+    }
+
+    /**
+     * set ChildPositionListener to receive updates whenever child is moved
+     *
+     * @param listener
+     */
+    public void setChildPositionListener(ChildPositionListener listener) {
+        mListener = listener;
+    }
+
+    public interface ChildPositionListener {
+        /**
+         * this callback is invoked whenever child is moved
+         *
+         * @param childView the current child view that was dragged
+         * @param oldPosition the original position from where child was dragged
+         * @param newPosition the new position where child is currently laid
+         */
+        void onChildMoved(View childView, Rect oldPosition, Rect newPosition);
     }
 
     @Override
