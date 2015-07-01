@@ -228,24 +228,25 @@ public class RearrangeableLayout extends ViewGroup {
     }
 
     @Override
+    public boolean onInterceptTouchEvent(MotionEvent ev) {
+        float x = ev.getX();
+        float y= ev.getY();
+        if (ev.getActionMasked() == MotionEvent.ACTION_MOVE) {
+            prepareTouch(x, y);
+            return true;
+        }
+        return false;
+    }
+
+    @Override
     public boolean onTouchEvent(MotionEvent event) {
         float x = event.getX();
         float y = event.getY();
+        //mViewDragHelper.processTouchEvent(event);
 
         switch (event.getAction()) {
             case MotionEvent.ACTION_DOWN:
-                mStartTouch = null;
-                mSelectedChild = findChildViewInsideTouch(Math.round(x), Math.round(y));
-                if (mSelectedChild != null) {
-                    bringChildToFront(mSelectedChild);
-                    LayoutParams lp = (LayoutParams) mSelectedChild.getLayoutParams();
-                    lp.initial = new PointF(lp.left, lp.top);
-                    mStartTouch = new PointF(x, y);
-                    if (mChildStartRect == null) {
-                        mChildStartRect = new Rect();
-                        mSelectedChild.getHitRect(mChildStartRect);
-                    }
-                }
+                prepareTouch(x, y);
                 break;
             case MotionEvent.ACTION_MOVE:
                 if (mSelectedChild != null && mStartTouch != null) {
@@ -286,6 +287,21 @@ public class RearrangeableLayout extends ViewGroup {
         return true;
     }
 
+    private void prepareTouch(float x, float y) {
+        mStartTouch = null;
+        mSelectedChild = findChildViewInsideTouch(Math.round(x), Math.round(y));
+        if (mSelectedChild != null) {
+            bringChildToFront(mSelectedChild);
+            LayoutParams lp = (LayoutParams) mSelectedChild.getLayoutParams();
+            lp.initial = new PointF(lp.left, lp.top);
+            mStartTouch = new PointF(x, y);
+            if (mChildStartRect == null) {
+                mChildStartRect = new Rect();
+                mSelectedChild.getHitRect(mChildStartRect);
+            }
+        }
+    }
+
     /**
      * Search by hightest index to lowest so that the
      * most recently touched child is found first
@@ -303,11 +319,6 @@ public class RearrangeableLayout extends ViewGroup {
             }
         }
         return null;
-    }
-
-    @Override
-    public boolean onInterceptTouchEvent(MotionEvent ev) {
-        return true;
     }
 
     public static class LayoutParams extends MarginLayoutParams {
